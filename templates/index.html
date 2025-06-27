@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #videoFeed {
+            width: 100%;
+            display: block;
+        }
+        .results {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .face-box {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Face Recognition System</h1>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="{{ url_for('upload_file') }}" style="background-color: #2196F3; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            Upload New Faces
+            </a>
+        </div>
+        <div class="video-container">
+            <img id="videoFeed" src="{{ url_for('video_feed') }}">
+        </div>
+        
+        <div class="controls">
+            <button id="refreshBtn">Refresh Recognition</button>
+        </div>
+        
+        <div class="results">
+            <h2>Recognition Results</h2>
+            <div id="recognitionResults"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const recognitionResults = document.getElementById('recognitionResults');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            // Function to update recognition results
+            function updateResults() {
+                fetch('/recognize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    recognitionResults.innerHTML = '';
+                    
+                    if (data.faces && data.faces.length > 0) {
+                        data.faces.forEach(face => {
+                            const faceBox = document.createElement('div');
+                            faceBox.className = 'face-box';
+                            faceBox.innerHTML = `<strong>Name:</strong> ${face.name}`;
+                            recognitionResults.appendChild(faceBox);
+                        });
+                    } else {
+                        recognitionResults.innerHTML = '<p>No faces detected.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Update results every 2 seconds
+            setInterval(updateResults, 2000);
+            
+            // Manual refresh button
+            refreshBtn.addEventListener('click', updateResults);
+            
+            // Initial update
+            updateResults();
+        });
+    </script>
+</body>
+</html>
